@@ -1,6 +1,8 @@
 Aircon-Cleaning-and-Repair-Services-Schedule
 
+
 Book your professional aircon cleaning and repair services here. Choose a time that works best for you to keep your system efficient, your electricity bills low, and your air perfectly clean.
+
 
 PROJECT TITLE
 "Aircon-Cleaning-and-Repair-Services-Schedule"
@@ -8,6 +10,7 @@ PROJECT TITLE
 
 PROJECT DESCRIPTION
 "A scheduling and service management system for aircon cleaning, maintenance, and repair appointments."
+
 
 TEAM ROSTER 
 | Name                      | Role            |
@@ -18,6 +21,7 @@ TEAM ROSTER
 | Piluden Lander Ian        | Builder         |
 | Dy Niño Victor Antonio M. | Builder         |
  
+
 
 PROBLEM STATEMENT
 Many air conditioning service businesses still manage appointments, customer records, and repair histories using paper forms or messaging apps. This often results in scheduling conflicts, missed appointments, delayed service, and difficulty tracking customer and technician information. The proposed Aircon Cleaning and Repair Services Scheduling System provides a centralized platform where customers can request services, administrators can manage appointments, technicians can monitor their schedules, and service records are securely stored. The system aims to improve operational efficiency, reduce scheduling errors, and enhance customer satisfaction through organized scheduling and record management.
