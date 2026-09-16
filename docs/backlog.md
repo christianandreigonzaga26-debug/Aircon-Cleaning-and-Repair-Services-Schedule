@@ -63,3 +63,10 @@
   * *Acceptance Criteria:* System allows modification of the final cost and notes on an existing record.
 * **Delete**: As an Admin, I want to delete an incorrect service record so that our historical data remains accurate.
   * *Acceptance Criteria:* Record is removed and no longer appears in the customer's history.
+
+## 3. Wireframe Mapping
+| Story Focus | Wireframe Filename |
+| :--- | :--- |
+| **Customer Booking** (Appt: Create, Service: Read) | `docs/wireframes/booking-wireframe.png` |
+| **Admin Dashboard** (Admin: Read/Update/Delete) | `docs/wireframes/admin-wireframe.png` |
+| **Tech Completion** (Record: Create, Appt: Read) | `docs/wireframes/technician-wireframe.png` |
