@@ -1,6 +1,20 @@
-# Aircon Cleaning and Repair Services - User Stories & Backlog
+# Aircon Cleaning and Repair Services - CRUD Backlog & User Stories
 
-## 1. Customers
+## 1. CRUD Summary Table
+
+| Record Type | Create | Read | Update | Delete |
+| :--- | :--- | :--- | :--- | :--- |
+| **Customer** | Register a new customer | View customer information and service history | Edit customer details (name, contact number, address) | Remove customer record |
+| **Appointment** | Schedule a cleaning or repair appointment | View appointment schedule and status | Reschedule appointment or update status | Cancel/Delete appointment |
+| **Technician** | Add a new technician | View technician profile and assigned schedule | Update technician details and availability | Remove technician record |
+| **Service** | Add a new service (Cleaning, Repair, Installation, Maintenance) | View available services and pricing | Edit service details, description, or price | Delete a service |
+| **Service Record**| Record a completed cleaning or repair service | View customer service history | Update service notes, cost, or completion status | Delete an incorrect service record |
+
+---
+
+## 2. User Stories & Acceptance Criteria
+
+### Customers
 * **Create**: As a Customer, I want to register a new account so that I don't have to re-enter my details every time I book a service.
   * *Acceptance Criteria:* System requires name, phone, and address. Upon submission, a unique Customer ID is generated.
 * **Read**: As an Admin, I want to view customer information and service history so that I can provide better customer support.
@@ -10,7 +24,7 @@
 * **Delete**: As an Admin, I want to remove a customer record so that we can comply with data deletion requests.
   * *Acceptance Criteria:* Deleting the customer ID completely removes their profile from the database.
 
-## 2. Appointments
+### Appointments
 * **Create**: As a Customer, I want to schedule a cleaning or repair appointment so that my aircon gets fixed on a specific date.
   * *Acceptance Criteria:* User must select a date, time, and service type. System prevents booking in the past.
 * **Read**: As an Admin, I want to view the appointment schedule and status so that I know how many jobs are pending today.
@@ -20,7 +34,7 @@
 * **Delete**: As a Customer, I want to cancel my appointment so that I don't get charged for a service I no longer need.
   * *Acceptance Criteria:* Canceling changes the appointment status to "Cancelled" or removes it from the active schedule.
 
-## 3. Technicians
+### Technicians
 * **Create**: As an Admin, I want to add a new technician so that they can be assigned to customer appointments.
   * *Acceptance Criteria:* Form captures technician name and specialty. System generates a unique Technician ID.
 * **Read**: As an Admin, I want to view a technician's profile and assigned schedule so that I don't double-book them.
@@ -30,7 +44,7 @@
 * **Delete**: As an Admin, I want to remove a technician record so that former employees can no longer be assigned to jobs.
   * *Acceptance Criteria:* Deleting the technician removes them from the active assignment roster.
 
-## 4. Services
+### Services
 * **Create**: As an Admin, I want to add a new service package (e.g., Deep Cleaning) so that customers can book newly offered options.
   * *Acceptance Criteria:* Must include a service name, description, and price.
 * **Read**: As a Customer, I want to view available services and pricing so that I know what to select and how much it will cost.
@@ -40,7 +54,7 @@
 * **Delete**: As an Admin, I want to delete a service so that customers cannot book packages we no longer offer.
   * *Acceptance Criteria:* Deleted services no longer appear in the customer booking dropdown.
 
-## 5. Service Records
+### Service Records
 * **Create**: As a Technician, I want to record a completed service so that the shop has a log of the work done for billing.
   * *Acceptance Criteria:* Form requires the Appointment ID, final cost, and work notes.
 * **Read**: As a Customer, I want to view my service history so that I know when my aircon was last cleaned or repaired.
