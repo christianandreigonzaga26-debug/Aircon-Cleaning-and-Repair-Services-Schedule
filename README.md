@@ -63,3 +63,9 @@ Week 1 AI Note
 - Appointment Scheduling
 - Technician Management
 - Service Management
+
+## How to Run and Test
+To run this project locally from a fresh clone:
+1. Run `npm install` to install dependencies.
+2. Run `npm test` to execute the automated test suite.
+3. Run `npm start` to start the server.
