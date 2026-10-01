@@ -1,14 +1,19 @@
 # UI Components Breakdown
 
 ## Shared Components
-1. **Navbar:** Main navigation (Home, Schedule, Customers).
-2. **StatusBadge:** Visual indicator for job status (e.g., Pending, In Progress, Completed, Cancelled).
-3. **JobCard / ListRow:** (Most Reused) Displays summary of an appointment (Date, Customer, Service Type, Status).
-4. **BookingForm:** Reusable form for creating and editing service appointments.
-5. **Button:** Standardized action buttons (Primary, Secondary, Danger).
+1. **Global Navigation Bar:** Reusable top header with varying links based on role:
+   * Customer: Logo, Aircon Services, Home, Profile, Logout.
+   * Technician: Logo, TECH PORTAL, My Jobs, Log Out.
+   * Admin: Logo, ADMIN DASHBOARD, Appointments, Techs, Customers.
+2. **Data Table:** Reused on the Admin Dashboard for both "Today's Appointments" and "Technician Roster"[cite: 4]. 
+3. **Form Group:** Standardized wrapper for labels and inputs:
+   * Dropdown selectors (e.g., Select Service)[cite: 2].
+   * Radio button groups (e.g., Time Slot: Morning / Afternoon)[cite: 2].
+   * Text inputs (e.g., Auto-filled Service Address)[cite: 2].
+   * Textareas (e.g., Work Notes)[cite: 3].
+4. **Action Buttons:** Standardized buttons including primary actions like "[ CONFIRM BOOKING ]"[cite: 2] and "[ MARK AS COMPLETE ]"[cite: 3], as well as inline table actions like "[x]" (delete) and "[ Edit ]"[cite: 4].
 
 ## Screens and Composition
-*   **Index/List View (Dashboard):** Navbar, Empty/Loading/Error States, List of JobCards.
-*   **Detail View:** Navbar, Job Details (Customer info, AC unit details, Notes), StatusBadge, Edit/Delete Buttons.
-*   **Create Form View:** Navbar, BookingForm, Submit Button.
-*   **Edit Form View:** Navbar, BookingForm (pre-filled), Save/Cancel Buttons.
+*   **Booking Screen:** Navbar (Customer), Booking Form (Service Dropdown, Calendar Grid, Time Slot Radios, Address Input), Confirm Booking Button[cite: 2].
+*   **Technician Job View:** Navbar (Tech), Job Details Text (Customer name, address, requested service), Update Service Record Form (Work Notes, Final Cost PHP), Mark As Complete Button[cite: 3].
+*   **Admin Dashboard:** Navbar (Admin), Appointments Section (Data Table of ID, Customer, Service, Tech Assigned, Status), Technician Roster Section (Add Tech Button, Data Table of Name, Specialty, Status)[cite: 4].
