@@ -1,4 +1,4 @@
-```php
+```blade
 <!DOCTYPE html>
 <html lang="en">
 
@@ -100,7 +100,6 @@
 
 
     <form id="create-schedule-form">
-
 
         <label for="customer_name">
             Customer Name
@@ -205,7 +204,6 @@
             hidden
         ></div>
 
-
     </form>
 
 
@@ -216,31 +214,19 @@
          UPDATE BOOKING
     ====================================================== -->
 
+    <h2>
+        Edit Booking
+    </h2>
+
+
     <form
         id="update-schedule-form"
         hidden
     >
 
-        <h2>
-            Update Booking
-        </h2>
-
-
-        <!--
-            Hidden ID
-
-            The user does not see this.
-
-            Example:
-            edit-id = 3
-
-            This means:
-            Update booking #3
-        -->
-
         <input
-            type="hidden"
             id="edit-id"
+            type="hidden"
         >
 
 
@@ -249,7 +235,6 @@
         </label>
 
         <input
-            type="text"
             id="edit-customer-name"
             required
         >
@@ -260,7 +245,6 @@
         </label>
 
         <input
-            type="text"
             id="edit-phone"
             required
         >
@@ -291,12 +275,12 @@
 
 
         <label for="edit-schedule-date">
-            Preferred Date and Time
+            Schedule Date and Time
         </label>
 
         <input
-            type="datetime-local"
             id="edit-schedule-date"
+            type="datetime-local"
             required
         >
 
@@ -307,44 +291,46 @@
 
         <textarea
             id="edit-notes"
-            rows="4"
         ></textarea>
 
 
         <button
-            type="submit"
             id="update-button"
+            type="submit"
         >
             Update Booking
         </button>
 
 
         <button
-            type="button"
             id="cancel-update-button"
+            type="button"
         >
             Cancel
         </button>
 
 
-        <p id="update-loading" hidden>
+        <p
+            id="update-loading"
+            hidden
+        >
             Updating booking...
         </p>
 
 
-        <div
+        <p
             id="update-success"
             class="success"
             hidden
-        ></div>
+        ></p>
 
 
         <div
             id="update-errors"
             class="error"
+            role="alert"
             hidden
         ></div>
-
 
     </form>
 
@@ -413,8 +399,6 @@
                 <br>
 
 
-                <!-- EDIT BUTTON -->
-
                 <button
                     type="button"
                     class="edit-button"
@@ -434,12 +418,11 @@
                     Edit
                 </button>
 
-
             </li>
 
         @empty
 
-            <li>
+            <li id="no-bookings">
                 No bookings found.
             </li>
 
@@ -454,412 +437,340 @@
 
     <script>
 
+        /* =====================================================
+           CSRF TOKEN
+        ====================================================== */
 
-    /* ========================================================
-       CSRF TOKEN
-    ======================================================== */
+        const csrfToken =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute('content');
 
-    const csrfToken =
-        document
-            .querySelector('meta[name="csrf-token"]')
-            .getAttribute('content');
 
+        /* =====================================================
+           CREATE ELEMENTS
+        ====================================================== */
 
-    /* ========================================================
-       CREATE ELEMENTS
-    ======================================================== */
+        const createForm =
+            document.querySelector('#create-schedule-form');
 
-    const createForm =
-        document.querySelector('#create-schedule-form');
+        const createButton =
+            document.querySelector('#create-button');
 
-    const createButton =
-        document.querySelector('#create-button');
+        const createLoading =
+            document.querySelector('#create-loading');
 
-    const createLoading =
-        document.querySelector('#create-loading');
+        const createSuccess =
+            document.querySelector('#create-success');
 
-    const createSuccess =
-        document.querySelector('#create-success');
+        const createErrors =
+            document.querySelector('#create-errors');
 
-    const createErrors =
-        document.querySelector('#create-errors');
+        const scheduleList =
+            document.querySelector('#schedule-list');
 
 
-    /* ========================================================
-       UPDATE ELEMENTS
-    ======================================================== */
+        /* =====================================================
+           UPDATE ELEMENTS
+        ====================================================== */
 
-    const updateForm =
-        document.querySelector('#update-schedule-form');
+        const updateForm =
+            document.querySelector('#update-schedule-form');
 
-    const updateButton =
-        document.querySelector('#update-button');
+        const updateButton =
+            document.querySelector('#update-button');
 
-    const updateLoading =
-        document.querySelector('#update-loading');
+        const updateLoading =
+            document.querySelector('#update-loading');
 
-    const updateSuccess =
-        document.querySelector('#update-success');
+        const updateSuccess =
+            document.querySelector('#update-success');
 
-    const updateErrors =
-        document.querySelector('#update-errors');
+        const updateErrors =
+            document.querySelector('#update-errors');
 
-    const cancelUpdateButton =
-        document.querySelector('#cancel-update-button');
+        const cancelUpdateButton =
+            document.querySelector('#cancel-update-button');
 
 
-    /* ========================================================
-       CREATE BOOKING
-    ======================================================== */
+        /* =====================================================
+           CREATE BOOKING
+           POST /schedules
+        ====================================================== */
 
-    createForm.addEventListener(
-        'submit',
-        async (event) => {
+        createForm.addEventListener(
+            'submit',
+            async (event) => {
 
-            event.preventDefault();
+                event.preventDefault();
 
 
-            // Clear previous messages
+                /* Clear previous messages */
 
-            createErrors.hidden = true;
+                createErrors.innerHTML = '';
+                createErrors.hidden = true;
 
-            createErrors.innerHTML = '';
+                createSuccess.textContent = '';
+                createSuccess.hidden = true;
 
-            createSuccess.hidden = true;
 
-            createSuccess.innerHTML = '';
+                /* Loading state */
 
+                createButton.disabled = true;
+                createButton.textContent = 'Saving...';
+                createLoading.hidden = false;
 
-            // Loading state
 
-            createButton.disabled = true;
+                /* Get form data */
 
-            createButton.textContent =
-                'Saving...';
+                const formData =
+                    new FormData(createForm);
 
-            createLoading.hidden = false;
 
+                const data = {
 
-            // Get form values
+                    customer_name:
+                        formData.get('customer_name'),
 
-            const data = {
+                    phone:
+                        formData.get('phone'),
 
-                customer_name:
-                    document.querySelector(
-                        '#customer_name'
-                    ).value,
+                    service_type:
+                        formData.get('service_type'),
 
-                phone:
-                    document.querySelector(
-                        '#phone'
-                    ).value,
+                    schedule_date:
+                        formData.get('schedule_date'),
 
-                service_type:
-                    document.querySelector(
-                        '#service_type'
-                    ).value,
+                    notes:
+                        formData.get('notes')
 
-                schedule_date:
-                    document.querySelector(
-                        '#schedule_date'
-                    ).value,
+                };
 
-                notes:
-                    document.querySelector(
-                        '#notes'
-                    ).value
 
-            };
+                try {
 
+                    /* Send POST request */
 
-            try {
+                    const response =
+                        await fetch(
+                            '/schedules',
+                            {
+                                method: 'POST',
 
+                                headers: {
+                                    'Content-Type':
+                                        'application/json',
 
-                // Send POST request
+                                    'Accept':
+                                        'application/json',
 
-                const response =
-                    await fetch(
-                        '/schedules',
-                        {
+                                    'X-CSRF-TOKEN':
+                                        csrfToken
+                                },
 
-                            method: 'POST',
+                                body:
+                                    JSON.stringify(data)
+                            }
+                        );
 
-                            headers: {
 
-                                'Content-Type':
-                                    'application/json',
+                    const result =
+                        await response.json();
 
-                                'Accept':
-                                    'application/json',
 
-                                'X-CSRF-TOKEN':
-                                    csrfToken
+                    /* Validation errors */
 
-                            },
+                    if (response.status === 422) {
 
-                            body:
-                                JSON.stringify(data)
+                        displayErrors(
+                            createErrors,
+                            result.errors
+                        );
 
-                        }
-                    );
+                        return;
+                    }
 
 
-                const result =
-                    await response.json();
+                    /* Other server errors */
 
+                    if (!response.ok) {
 
-                // Validation errors
+                        createErrors.textContent =
+                            result.message ||
+                            'Sorry, the booking could not be saved. Please try again.';
 
-                if (
-                    response.status === 422
-                ) {
+                        createErrors.hidden = false;
 
-                    displayErrors(
-                        createErrors,
-                        result.errors
-                    );
+                        return;
+                    }
 
-                    return;
-                }
 
+                    /* Successful booking */
 
-                // Other error
-
-                if (!response.ok) {
-
-                    createErrors.innerHTML =
+                    createSuccess.textContent =
                         result.message ||
-                        'Something went wrong.';
+                        'Booking saved successfully!';
 
-                    createErrors.hidden =
-                        false;
+                    createSuccess.hidden = false;
 
-                    return;
+
+                    /* Add new booking without reload */
+
+                    if (result.data) {
+
+                        addBookingToPage(
+                            result.data
+                        );
+
+                    }
+
+
+                    /* Clear form */
+
+                    createForm.reset();
+
                 }
 
 
-                // Success
+                catch (error) {
 
-                createSuccess.textContent =
-                    result.message ||
-                    'Booking created successfully!';
+                    console.error(error);
 
-                createSuccess.hidden =
-                    false;
+                    createErrors.textContent =
+                        'Network problem. Check your internet or server, then try again.';
 
+                    createErrors.hidden = false;
 
-                // Clear form
-
-                createForm.reset();
+                }
 
 
-                // Add new booking to page
+                finally {
 
-                addBookingToPage(
-                    result.data
+                    createButton.disabled = false;
+
+                    createButton.textContent =
+                        'Save Booking';
+
+                    createLoading.hidden = true;
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           ADD NEW BOOKING TO PAGE
+        ====================================================== */
+
+        function addBookingToPage(booking) {
+
+            /* Remove "No bookings found" */
+
+            const emptyMessage =
+                document.querySelector(
+                    '#no-bookings'
+                );
+
+            if (emptyMessage) {
+
+                emptyMessage.remove();
+
+            }
+
+
+            /* Create booking item */
+
+            const item =
+                document.createElement('li');
+
+            item.id =
+                `schedule-${booking.id}`;
+
+            item.className =
+                'booking';
+
+
+            item.innerHTML = `
+
+                <strong class="customer-name">
+                    ${escapeHtml(
+                        booking.customer_name || ''
+                    )}
+                </strong>
+
+                <br>
+
+                Phone:
+
+                <span class="phone">
+                    ${escapeHtml(
+                        booking.phone || ''
+                    )}
+                </span>
+
+                <br>
+
+                Service:
+
+                <span class="service-type">
+                    ${escapeHtml(
+                        booking.service_type || ''
+                    )}
+                </span>
+
+                <br>
+
+                Date:
+
+                <span class="schedule-date">
+                    ${escapeHtml(
+                        booking.schedule_date || ''
+                    )}
+                </span>
+
+                <br>
+
+                Notes:
+
+                <span class="notes">
+                    ${escapeHtml(
+                        booking.notes || ''
+                    )}
+                </span>
+
+                <br>
+
+                <button
+                    type="button"
+                    class="edit-button"
+                >
+                    Edit
+                </button>
+
+            `;
+
+
+            scheduleList.appendChild(item);
+
+
+            /* Add Edit button listener */
+
+            const editButton =
+                item.querySelector(
+                    '.edit-button'
                 );
 
 
-            }
-
-
-            catch (error) {
-
-                console.error(error);
-
-                createErrors.textContent =
-                    'Unable to connect to the server.';
-
-                createErrors.hidden =
-                    false;
-
-            }
-
-
-            finally {
-
-                createButton.disabled =
-                    false;
-
-                createButton.textContent =
-                    'Save Booking';
-
-                createLoading.hidden =
-                    true;
-
-            }
-
-        }
-    );
-
-
-    /* ========================================================
-       ADD NEW BOOKING TO PAGE
-    ======================================================== */
-
-    function addBookingToPage(booking) {
-
-        const list =
-            document.querySelector(
-                '#schedule-list'
+            updateEditButtonData(
+                editButton,
+                booking
             );
 
 
-        // Remove "No bookings found"
-
-        const emptyMessage =
-            list.querySelector('li:not([id])');
-
-        if (emptyMessage) {
-
-            emptyMessage.remove();
-
-        }
-
-
-        // Create booking element
-
-        const item =
-            document.createElement('li');
-
-        item.id =
-            `schedule-${booking.id}`;
-
-        item.className =
-            'booking';
-
-
-        item.innerHTML = `
-
-            <strong class="customer-name">
-                ${escapeHtml(
-                    booking.customer_name
-                )}
-            </strong>
-
-            <br>
-
-            Phone:
-
-            <span class="phone">
-                ${escapeHtml(
-                    booking.phone
-                )}
-            </span>
-
-            <br>
-
-            Service:
-
-            <span class="service-type">
-                ${escapeHtml(
-                    booking.service_type
-                )}
-            </span>
-
-            <br>
-
-            Date:
-
-            <span class="schedule-date">
-                ${escapeHtml(
-                    booking.schedule_date
-                )}
-            </span>
-
-            <br>
-
-            Notes:
-
-            <span class="notes">
-                ${escapeHtml(
-                    booking.notes || ''
-                )}
-            </span>
-
-            <br>
-
-            <button
-                type="button"
-                class="edit-button"
-            >
-                Edit
-            </button>
-
-        `;
-
-
-        list.appendChild(item);
-
-
-        // Add Edit button function
-
-        const editButton =
-            item.querySelector(
-                '.edit-button'
-            );
-
-
-        editButton.addEventListener(
-            'click',
-            () => {
-
-                showUpdateForm(
-                    booking
-                );
-
-            }
-        );
-
-
-        // Store updated information
-        updateEditButtonData(
-            editButton,
-            booking
-        );
-
-    }
-
-
-    /* ========================================================
-       FIND EXISTING EDIT BUTTONS
-    ======================================================== */
-
-    const editButtons =
-        document.querySelectorAll(
-            '.edit-button'
-        );
-
-
-    editButtons.forEach(
-        (button) => {
-
-            button.addEventListener(
+            editButton.addEventListener(
                 'click',
                 () => {
-
-                    const booking = {
-
-                        id:
-                            button.dataset.id,
-
-                        customer_name:
-                            button.dataset.customerName,
-
-                        phone:
-                            button.dataset.phone,
-
-                        service_type:
-                            button.dataset.serviceType,
-
-                        schedule_date:
-                            button.dataset.scheduleDate,
-
-                        notes:
-                            button.dataset.notes
-
-                    };
-
 
                     showUpdateForm(
                         booking
@@ -869,520 +780,537 @@
             );
 
         }
-    );
 
 
-    /* ========================================================
-       SHOW UPDATE FORM
-    ======================================================== */
+        /* =====================================================
+           EDIT EXISTING BOOKINGS
+        ====================================================== */
 
-    function showUpdateForm(booking) {
+        /*
+         * This replaces the separate document click listener
+         * from the supplied code.
+         *
+         * It gives each existing Edit button one listener.
+         */
 
-
-        // Put booking ID into hidden input
-
-        document.querySelector(
-            '#edit-id'
-        ).value =
-            booking.id;
-
-
-        // Put customer name
-
-        document.querySelector(
-            '#edit-customer-name'
-        ).value =
-            booking.customer_name || '';
-
-
-        // Put phone
-
-        document.querySelector(
-            '#edit-phone'
-        ).value =
-            booking.phone || '';
-
-
-        // Put service
-
-        document.querySelector(
-            '#edit-service-type'
-        ).value =
-            booking.service_type || '';
-
-
-        // Put date
-
-        document.querySelector(
-            '#edit-schedule-date'
-        ).value =
-            formatDateForInput(
-                booking.schedule_date
-            );
-
-
-        // Put notes
-
-        document.querySelector(
-            '#edit-notes'
-        ).value =
-            booking.notes || '';
-
-
-        // Clear messages
-
-        updateErrors.hidden =
-            true;
-
-        updateErrors.innerHTML =
-            '';
-
-        updateSuccess.hidden =
-            true;
-
-        updateSuccess.innerHTML =
-            '';
-
-
-        // Show form
-
-        updateForm.hidden =
-            false;
-
-
-        // Scroll to form
-
-        updateForm.scrollIntoView({
-            behavior: 'smooth'
-        });
-
-    }
-
-
-    /* ========================================================
-       UPDATE BOOKING
-    ======================================================== */
-
-    updateForm.addEventListener(
-        'submit',
-        async (event) => {
-
-            event.preventDefault();
-
-
-            // Clear messages
-
-            updateErrors.hidden =
-                true;
-
-            updateErrors.innerHTML =
-                '';
-
-            updateSuccess.hidden =
-                true;
-
-            updateSuccess.innerHTML =
-                '';
-
-
-            // Loading
-
-            updateButton.disabled =
-                true;
-
-            updateButton.textContent =
-                'Updating...';
-
-            updateLoading.hidden =
-                false;
-
-
-            // Get ID
-
-            const id =
-                document.querySelector(
-                    '#edit-id'
-                ).value;
-
-
-            // Get updated values
-
-            const data = {
-
-                customer_name:
-                    document.querySelector(
-                        '#edit-customer-name'
-                    ).value,
-
-                phone:
-                    document.querySelector(
-                        '#edit-phone'
-                    ).value,
-
-                service_type:
-                    document.querySelector(
-                        '#edit-service-type'
-                    ).value,
-
-                schedule_date:
-                    document.querySelector(
-                        '#edit-schedule-date'
-                    ).value,
-
-                notes:
-                    document.querySelector(
-                        '#edit-notes'
-                    ).value
-
-            };
-
-
-            try {
-
-
-                // Send PUT request
-
-                const response =
-                    await fetch(
-                        `/schedules/${id}`,
-                        {
-
-                            method: 'PUT',
-
-                            headers: {
-
-                                'Content-Type':
-                                    'application/json',
-
-                                'Accept':
-                                    'application/json',
-
-                                'X-CSRF-TOKEN':
-                                    csrfToken
-
-                            },
-
-                            body:
-                                JSON.stringify(data)
-
-                        }
-                    );
-
-
-                const result =
-                    await response.json();
-
-
-                // Validation error
-
-                if (
-                    response.status === 422
-                ) {
-
-                    displayErrors(
-                        updateErrors,
-                        result.errors
-                    );
-
-                    return;
-                }
-
-
-                // Other server error
-
-                if (!response.ok) {
-
-                    updateErrors.innerHTML =
-                        result.message ||
-                        'Unable to update booking.';
-
-                    updateErrors.hidden =
-                        false;
-
-                    return;
-                }
-
-
-                // Success
-
-                updateSuccess.textContent =
-                    result.message ||
-                    'Booking updated successfully!';
-
-                updateSuccess.hidden =
-                    false;
-
-
-                // Update booking on screen
-
-                updateBookingOnPage(
-                    result.data
-                );
-
-
-                // Hide form
-
-                setTimeout(() => {
-
-                    updateForm.hidden =
-                        true;
-
-                }, 1000);
-
-            }
-
-
-            catch (error) {
-
-                console.error(error);
-
-                updateErrors.textContent =
-                    'Unable to connect to the server.';
-
-                updateErrors.hidden =
-                    false;
-
-            }
-
-
-            finally {
-
-                updateButton.disabled =
-                    false;
-
-                updateButton.textContent =
-                    'Update Booking';
-
-                updateLoading.hidden =
-                    true;
-
-            }
-
-        }
-    );
-
-
-    /* ========================================================
-       UPDATE BOOKING ON PAGE
-    ======================================================== */
-
-    function updateBookingOnPage(
-        booking
-    ) {
-
-        const item =
-            document.querySelector(
-                `#schedule-${booking.id}`
-            );
-
-
-        if (!item) {
-
-            return;
-
-        }
-
-
-        item.querySelector(
-            '.customer-name'
-        ).textContent =
-            booking.customer_name;
-
-
-        item.querySelector(
-            '.phone'
-        ).textContent =
-            booking.phone;
-
-
-        item.querySelector(
-            '.service-type'
-        ).textContent =
-            booking.service_type;
-
-
-        item.querySelector(
-            '.schedule-date'
-        ).textContent =
-            booking.schedule_date;
-
-
-        item.querySelector(
-            '.notes'
-        ).textContent =
-            booking.notes || '';
-
-
-        // Update Edit button
-
-        const editButton =
-            item.querySelector(
+        const editButtons =
+            document.querySelectorAll(
                 '.edit-button'
             );
 
 
-        updateEditButtonData(
-            editButton,
-            booking
-        );
+        editButtons.forEach(
+            (button) => {
 
-    }
+                button.addEventListener(
+                    'click',
+                    () => {
 
+                        const booking = {
 
-    /* ========================================================
-       UPDATE EDIT BUTTON DATA
-    ======================================================== */
+                            id:
+                                button.dataset.id,
 
-    function updateEditButtonData(
-        button,
-        booking
-    ) {
+                            customer_name:
+                                button.dataset.customerName,
 
-        button.dataset.id =
-            booking.id;
+                            phone:
+                                button.dataset.phone,
 
-        button.dataset.customerName =
-            booking.customer_name;
+                            service_type:
+                                button.dataset.serviceType,
 
-        button.dataset.phone =
-            booking.phone;
+                            schedule_date:
+                                button.dataset.scheduleDate,
 
-        button.dataset.serviceType =
-            booking.service_type;
+                            notes:
+                                button.dataset.notes
 
-        button.dataset.scheduleDate =
-            formatDateForInput(
-                booking.schedule_date
-            );
-
-        button.dataset.notes =
-            booking.notes || '';
-
-    }
+                        };
 
 
-    /* ========================================================
-       CANCEL UPDATE
-    ======================================================== */
-
-    cancelUpdateButton.addEventListener(
-        'click',
-        () => {
-
-            updateForm.hidden =
-                true;
-
-            updateErrors.hidden =
-                true;
-
-            updateSuccess.hidden =
-                true;
-
-        }
-    );
-
-
-    /* ========================================================
-       DISPLAY ERRORS
-    ======================================================== */
-
-    function displayErrors(
-        container,
-        errors
-    ) {
-
-        container.innerHTML =
-            '';
-
-
-        if (!errors) {
-
-            container.textContent =
-                'Please check your information.';
-
-            container.hidden =
-                false;
-
-            return;
-
-        }
-
-
-        Object.values(errors)
-            .forEach((messages) => {
-
-                messages.forEach(
-                    (message) => {
-
-                        const paragraph =
-                            document.createElement(
-                                'p'
-                            );
-
-                        paragraph.textContent =
-                            message;
-
-                        container.appendChild(
-                            paragraph
+                        showUpdateForm(
+                            booking
                         );
 
                     }
                 );
 
+            }
+        );
+
+
+        /* =====================================================
+           SHOW UPDATE FORM
+        ====================================================== */
+
+        function showUpdateForm(booking) {
+
+            document.querySelector(
+                '#edit-id'
+            ).value =
+                booking.id;
+
+
+            document.querySelector(
+                '#edit-customer-name'
+            ).value =
+                booking.customer_name || '';
+
+
+            document.querySelector(
+                '#edit-phone'
+            ).value =
+                booking.phone || '';
+
+
+            document.querySelector(
+                '#edit-service-type'
+            ).value =
+                booking.service_type || '';
+
+
+            document.querySelector(
+                '#edit-schedule-date'
+            ).value =
+                formatDateForInput(
+                    booking.schedule_date
+                );
+
+
+            document.querySelector(
+                '#edit-notes'
+            ).value =
+                booking.notes || '';
+
+
+            /* Clear previous messages */
+
+            updateErrors.innerHTML = '';
+            updateErrors.hidden = true;
+
+            updateSuccess.textContent = '';
+            updateSuccess.hidden = true;
+
+
+            /* Show form */
+
+            updateForm.hidden = false;
+
+
+            /* Scroll to form */
+
+            updateForm.scrollIntoView({
+                behavior: 'smooth'
             });
-
-
-        container.hidden =
-            false;
-
-    }
-
-
-    /* ========================================================
-       FORMAT DATE
-    ======================================================== */
-
-    function formatDateForInput(
-        date
-    ) {
-
-        if (!date) {
-
-            return '';
 
         }
 
 
-        return date
-            .replace(' ', 'T')
-            .substring(0, 16);
+        /* =====================================================
+           UPDATE BOOKING
+           PUT /schedules/{id}
+        ====================================================== */
 
-    }
+        updateForm.addEventListener(
+            'submit',
+            async (event) => {
+
+                event.preventDefault();
 
 
-    /* ========================================================
-       ESCAPE HTML
-    ======================================================== */
+                /* Clear previous messages */
 
-    function escapeHtml(
-        value
-    ) {
+                updateErrors.innerHTML = '';
+                updateErrors.hidden = true;
 
-        const div =
-            document.createElement(
-                'div'
+                updateSuccess.textContent = '';
+                updateSuccess.hidden = true;
+
+
+                /* Loading state */
+
+                updateButton.disabled = true;
+                updateButton.textContent =
+                    'Updating...';
+
+                updateLoading.hidden = false;
+
+
+                /* Get booking ID */
+
+                const id =
+                    document.querySelector(
+                        '#edit-id'
+                    ).value;
+
+
+                /* Get updated values */
+
+                const data = {
+
+                    customer_name:
+                        document.querySelector(
+                            '#edit-customer-name'
+                        ).value,
+
+                    phone:
+                        document.querySelector(
+                            '#edit-phone'
+                        ).value,
+
+                    service_type:
+                        document.querySelector(
+                            '#edit-service-type'
+                        ).value,
+
+                    schedule_date:
+                        document.querySelector(
+                            '#edit-schedule-date'
+                        ).value,
+
+                    notes:
+                        document.querySelector(
+                            '#edit-notes'
+                        ).value
+
+                };
+
+
+                try {
+
+                    /* Send PUT request */
+
+                    const response =
+                        await fetch(
+                            `/schedules/${id}`,
+                            {
+                                method: 'PUT',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json',
+
+                                    'Accept':
+                                        'application/json',
+
+                                    'X-CSRF-TOKEN':
+                                        csrfToken
+                                },
+
+                                body:
+                                    JSON.stringify(data)
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    /* Validation errors */
+
+                    if (response.status === 422) {
+
+                        displayErrors(
+                            updateErrors,
+                            result.errors
+                        );
+
+                        return;
+                    }
+
+
+                    /* Other server errors */
+
+                    if (!response.ok) {
+
+                        updateErrors.textContent =
+                            result.message ||
+                            'Sorry, the booking could not be updated.';
+
+                        updateErrors.hidden = false;
+
+                        return;
+                    }
+
+
+                    /* Successful update */
+
+                    updateSuccess.textContent =
+                        result.message ||
+                        'Booking updated successfully!';
+
+                    updateSuccess.hidden = false;
+
+
+                    /* Update booking on page */
+
+                    if (result.data) {
+
+                        updateBookingOnPage(
+                            result.data
+                        );
+
+                    }
+
+
+                    /* Hide update form */
+
+                    updateForm.hidden = true;
+
+                }
+
+
+                catch (error) {
+
+                    console.error(error);
+
+                    updateErrors.textContent =
+                        'Network problem. Please try again.';
+
+                    updateErrors.hidden = false;
+
+                }
+
+
+                finally {
+
+                    updateButton.disabled = false;
+
+                    updateButton.textContent =
+                        'Update Booking';
+
+                    updateLoading.hidden = true;
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           UPDATE BOOKING ON PAGE
+        ====================================================== */
+
+        function updateBookingOnPage(booking) {
+
+            const item =
+                document.querySelector(
+                    `#schedule-${booking.id}`
+                );
+
+
+            if (!item) {
+
+                return;
+
+            }
+
+
+            item.querySelector(
+                '.customer-name'
+            ).textContent =
+                booking.customer_name;
+
+
+            item.querySelector(
+                '.phone'
+            ).textContent =
+                booking.phone;
+
+
+            item.querySelector(
+                '.service-type'
+            ).textContent =
+                booking.service_type;
+
+
+            item.querySelector(
+                '.schedule-date'
+            ).textContent =
+                booking.schedule_date;
+
+
+            item.querySelector(
+                '.notes'
+            ).textContent =
+                booking.notes || '';
+
+
+            /* Update Edit button */
+
+            const editButton =
+                item.querySelector(
+                    '.edit-button'
+                );
+
+
+            updateEditButtonData(
+                editButton,
+                booking
             );
 
-        div.textContent =
-            value;
+        }
 
-        return div.innerHTML;
 
-    }
+        /* =====================================================
+           UPDATE EDIT BUTTON DATA
+        ====================================================== */
 
+        function updateEditButtonData(
+            button,
+            booking
+        ) {
+
+            if (!button) {
+
+                return;
+
+            }
+
+
+            button.dataset.id =
+                booking.id;
+
+            button.dataset.customerName =
+                booking.customer_name || '';
+
+            button.dataset.phone =
+                booking.phone || '';
+
+            button.dataset.serviceType =
+                booking.service_type || '';
+
+            button.dataset.scheduleDate =
+                formatDateForInput(
+                    booking.schedule_date
+                );
+
+            button.dataset.notes =
+                booking.notes || '';
+
+        }
+
+
+        /* =====================================================
+           CANCEL UPDATE
+        ====================================================== */
+
+        cancelUpdateButton.addEventListener(
+            'click',
+            () => {
+
+                updateForm.hidden = true;
+
+                updateErrors.innerHTML = '';
+                updateErrors.hidden = true;
+
+                updateSuccess.textContent = '';
+                updateSuccess.hidden = true;
+
+            }
+        );
+
+
+        /* =====================================================
+           DISPLAY VALIDATION ERRORS
+        ====================================================== */
+
+        function displayErrors(
+            container,
+            errors
+        ) {
+
+            container.innerHTML = '';
+
+
+            if (!errors) {
+
+                container.textContent =
+                    'Please check your information.';
+
+                container.hidden = false;
+
+                return;
+
+            }
+
+
+            Object.values(errors)
+                .forEach(
+                    (messages) => {
+
+                        messages.forEach(
+                            (message) => {
+
+                                const paragraph =
+                                    document.createElement(
+                                        'p'
+                                    );
+
+                                paragraph.textContent =
+                                    message;
+
+                                container.appendChild(
+                                    paragraph
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+
+            container.hidden = false;
+
+        }
+
+
+        /* =====================================================
+           FORMAT DATE
+        ====================================================== */
+
+        function formatDateForInput(
+            date
+        ) {
+
+            if (!date) {
+
+                return '';
+
+            }
+
+
+            return date
+                .replace(' ', 'T')
+                .substring(0, 16);
+
+        }
+
+
+        /* =====================================================
+           ESCAPE HTML
+        ====================================================== */
+
+        function escapeHtml(
+            value
+        ) {
+
+            const div =
+                document.createElement(
+                    'div'
+                );
+
+            div.textContent =
+                value;
+
+            return div.innerHTML;
+
+        }
 
     </script>
-
 
 </body>
 
