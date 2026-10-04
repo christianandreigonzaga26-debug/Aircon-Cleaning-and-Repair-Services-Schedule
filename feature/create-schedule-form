@@ -1,7 +1,1 @@
-| Member | Job | Suggested branch |
-|---|---|---|
-| Piluden, Lander Ian | Create booking form | `feature/create-schedule-form` |
-| Curan, Lawrence | Create Fetch/async JavaScript | `feature/create-schedule-fetch` |
-| Gonzaga, Christian Andrei | Edit booking form | `feature/update-schedule-form` |
-| Lora, Nikko Pual| Error/loading/success messages | `feature/async-ui-states` |
-| Dy, Nino Victior Antonio | Testing documents and AI prompt log | `docs/week-07-tests-and-ai-log` |
+Piluden, Lander Ian	Create booking form	feature/create-schedule-form
