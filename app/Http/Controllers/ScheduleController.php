@@ -14,3 +14,48 @@ public function store(Request $request)
         'data' => $schedule,
     ], 201);
 }
+
+public function show($id)
+{
+    $schedule = \App\Models\Schedule::find($id);
+
+    if (!$schedule) {
+        return response()->view(
+            'schedules.not-found',
+            [],
+            404
+        );
+    }
+
+    return view('schedules.show', [
+        'schedule' => $schedule
+    ]);
+}
+
+public function destroy($id)
+{
+    $schedule = \App\Models\Schedule::find($id);
+
+    if (!$schedule) {
+        return response()->json([
+            'message' => 'Booking not found.'
+        ], 404);
+    }
+
+    $schedule->delete();
+
+    return response()->json([
+        'message' => 'Booking deleted successfully.'
+    ]);
+}
+
+public function destroy($id)
+{
+    $schedule = \App\Models\Schedule::findOrFail($id);
+
+    $schedule->delete();
+
+    return response()->json([
+        'message' => 'Booking deleted successfully.'
+    ]);
+}
