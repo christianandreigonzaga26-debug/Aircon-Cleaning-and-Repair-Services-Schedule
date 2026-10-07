@@ -1,7 +1,14 @@
 const express = require('express');
+const path = require('node:path');
+
 const app = express();
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'aircon.html'));
+});
 
 // Import ALL routes
 const customerRoutes = require('./routes/customers');
@@ -17,4 +24,8 @@ app.use('/technicians', technicianRoutes);
 app.use('/services', serviceRoutes);
 app.use('/service-records', serviceRecordRoutes);
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
