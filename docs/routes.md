@@ -105,34 +105,3 @@ A scheduling and service management system for aircon cleaning, maintenance, and
       { "id": 1, "status": "Scheduled", "date": "2026-09-10" }
     ]
   }
-
-// tests/booking-validation.test.ts
-
-describe('Aircon Booking Validation & Critical Paths', () => {
-  test('rejects booking attempts for past dates (400)', async () => {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const response = await createBooking({
-      serviceType: 'Chemical Wash',
-      date: yesterday,
-      timeSlot: '10:00 AM',
-      unitCount: 1,
-    });
-    
-    expect(response.status).toBe(400);
-    expect(response.body.error).toContain('Cannot book a past date');
-  });
-
-  test('prevents double-booking for the same technician slot (409)', async () => {
-    const slot = { date: '2026-11-01', timeSlot: '14:00', technicianId: 'tech_01' };
-    
-    await createBooking(slot);
-    const duplicateResponse = await createBooking(slot);
-
-    expect(duplicateResponse.status).toBe(409); // Conflict
-  });
-
-  test('prevents non-admin user from updating another user\'s booking (403)', async () => {
-    const response = await updateBookingAsUser('other_user_booking_id', { unitCount: 5 });
-    expect(response.status).toBe(403);
-  });
-});
