@@ -1,6 +1,8 @@
 function showMessage(type, message) {
     const globalFeedback = document.querySelector("#global-feedback");
 
+    if (!globalFeedback) return;
+
     globalFeedback.textContent = message;
     globalFeedback.className = type;
 }
@@ -10,66 +12,56 @@ const listLoading = document.querySelector("#list-loading");
 const retryLoad = document.querySelector("#retry-load");
 
 async function loadBookings() {
-    // Show loading message
-    listLoading.hidden = false;
+    if (!scheduleList || !listLoading || !retryLoad) return;
 
-    // Hide retry button while loading
+    listLoading.hidden = false;
     retryLoad.hidden = true;
 
     try {
         const response = await fetch("/schedules", {
             method: "GET",
             headers: {
-                "Accept": "application/json"
+                Accept: "application/json"
             }
         });
 
-        try {
-    const response = await fetch("/schedules", options);
-
-    if (!response.ok) {
-        throw new Error("Request failed");
-    }
-} catch (error) {
-    showMessage(
-        "error",
-        "Something went wrong. Check your connection and try again."
-    );
-}
-
-        // Check if request failed
         if (!response.ok) {
             throw new Error("Could not load bookings.");
         }
 
         const result = await response.json();
+        const schedules = Array.isArray(result.data) ? result.data : Array.isArray(result) ? result : [];
 
-        // Clear old bookings
         scheduleList.innerHTML = "";
 
-        // Display bookings
-        result.forEach((schedule) => {
+        if (!schedules.length) {
+            scheduleList.innerHTML = "<p>No bookings found.</p>";
+            listLoading.hidden = true;
+            return;
+        }
+
+        schedules.forEach((schedule) => {
             const booking = document.createElement("div");
 
             booking.innerHTML = `
                 <p>
                     <strong>Customer:</strong>
-                    ${schedule.customer_name}
+                    ${schedule.customer_name ?? schedule.customerName ?? "Unknown customer"}
                 </p>
 
                 <p>
                     <strong>Phone:</strong>
-                    ${schedule.phone}
+                    ${schedule.phone ?? "Not provided"}
                 </p>
 
                 <p>
                     <strong>Service:</strong>
-                    ${schedule.service_type}
+                    ${schedule.service_type ?? schedule.service ?? "General Service"}
                 </p>
 
                 <p>
                     <strong>Date:</strong>
-                    ${schedule.schedule_date}
+                    ${schedule.schedule_date ?? schedule.date ?? "Not scheduled"}
                 </p>
 
                 <p>
@@ -83,19 +75,12 @@ async function loadBookings() {
             scheduleList.appendChild(booking);
         });
 
-        // Hide loading message
         listLoading.hidden = true;
-
     } catch (error) {
         console.error(error);
 
-        // Hide loading message
         listLoading.hidden = true;
-
-        // Show retry button
         retryLoad.hidden = false;
-
-        // Show friendly error
         showMessage(
             "error",
             "We could not load bookings. Check your connection and try again."
@@ -103,10 +88,12 @@ async function loadBookings() {
     }
 }
 
-// Try loading again when button is clicked
-retryLoad.addEventListener("click", () => {
-    loadBookings();
-});
+if (retryLoad) {
+    retryLoad.addEventListener("click", () => {
+        loadBookings();
+    });
+}
 
-// Load bookings when page opens
-loadBookings();
+if (scheduleList) {
+    loadBookings();
+}

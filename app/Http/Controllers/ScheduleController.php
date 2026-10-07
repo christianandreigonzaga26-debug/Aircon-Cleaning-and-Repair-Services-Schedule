@@ -48,6 +48,26 @@ class ScheduleController extends Controller
         ]);
     }
 
+    public function show(Schedule $schedule)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking fetched successfully.',
+            'data' => $schedule,
+        ]);
+    }
+
+    public function destroy(Schedule $schedule)
+    {
+        $schedule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking deleted successfully.',
+            'data' => null,
+        ]);
+    }
+
     protected function bookingRules(): array
     {
         return [

@@ -16,6 +16,7 @@ const appointmentRoutes = require('./routes/appointments');
 const technicianRoutes = require('./routes/technicians');
 const serviceRoutes = require('./routes/services');
 const serviceRecordRoutes = require('./routes/serviceRecords');
+const scheduleRoutes = require('./routes/schedules');
 
 // Connect ALL routes
 app.use('/customers', customerRoutes);
@@ -23,6 +24,7 @@ app.use('/appointments', appointmentRoutes);
 app.use('/technicians', technicianRoutes);
 app.use('/services', serviceRoutes);
 app.use('/service-records', serviceRecordRoutes);
+app.use('/schedules', scheduleRoutes);
 
 module.exports = app;
 
