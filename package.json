@@ -1,20 +1,46 @@
 {
   "name": "aircon-cleaning-and-repair-services-schedule",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Aircon cleaning and repair scheduling app",
+  "description": "Professional aircon cleaning and repair scheduling system - Production Ready",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
     "test": "node --test",
     "migrate": "node scripts/migrate.js",
-    "dev": "NODE_ENV=development node server.js"
+    "seed": "node scripts/seed.js",
+    "lint": "eslint . --fix",
+    "setup": "npm install && node scripts/migrate.js && node scripts/seed.js"
   },
+  "keywords": [
+    "aircon",
+    "scheduling",
+    "repair",
+    "cleaning",
+    "services"
+  ],
+  "author": "Team Aircon Services",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.18.2",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.1.2",
+    "bcryptjs": "^2.4.3",
+    "express-validator": "^7.0.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "nodemailer": "^6.9.7"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "eslint": "^8.54.0"
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
