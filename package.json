@@ -6,9 +6,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test test/**/*.test.js",
+    "migrate": "node scripts/migrate.js",
+    "dev": "NODE_ENV=development node server.js"
   },
   "dependencies": {
     "express": "^4.21.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
