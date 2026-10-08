@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/**/*.test.js",
+    "test": "node --test",
     "migrate": "node scripts/migrate.js",
     "dev": "NODE_ENV=development node server.js"
   },
