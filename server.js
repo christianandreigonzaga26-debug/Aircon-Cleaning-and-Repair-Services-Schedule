@@ -1,83 +1,79 @@
+// server.js
+require('dotenv').config();
 const express = require('express');
-const path = require('node:path');
+const { Pool } = require('pg');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const APP_DEBUG = process.env.APP_DEBUG === 'true';
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public')); // Place aircon.html inside a 'public' folder as 'index.html'
 
-// Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-app.use(express.static('public'));
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
+// --- AUTH API ---
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const { rows } = await pool.query('SELECT * FROM users WHERE username = $1 AND password_hash = $2', [username, password]);
+    if (rows.length > 0) res.json(rows[0]);
+    else res.status(401).json({ error: 'Invalid credentials' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// CORS (allow all for now, restrict in production)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
+app.post('/api/register', async (req, res) => {
+  const { name, username, password } = req.body;
+  try {
+    await pool.query('INSERT INTO users (name, username, password_hash, role) VALUES ($1, $2, $3, $4)', [name, username, password, 'customer']);
+    res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: 'Username taken or invalid data' }); }
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', environment: NODE_ENV });
+// --- APPOINTMENTS API ---
+app.get('/api/appointments', async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM appointments ORDER BY date DESC');
+  res.json(rows);
 });
 
-// Main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'aircon.html'));
+app.post('/api/appointments', async (req, res) => {
+  const { id, customerName, customerUsername, service, date, slot, address } = req.body;
+  await pool.query(
+    'INSERT INTO appointments (id, customer_name, customer_username, service, date, slot, address) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    [id, customerName, customerUsername, service, date, slot, address]
+  );
+  res.json({ success: true });
 });
 
-// Import ALL routes
-const customerRoutes = require('./routes/customers');
-const appointmentRoutes = require('./routes/appointments');
-const technicianRoutes = require('./routes/technicians');
-const serviceRoutes = require('./routes/services');
-const serviceRecordRoutes = require('./routes/serviceRecords');
-const scheduleRoutes = require('./routes/schedules');
+app.put('/api/appointments/:id', async (req, res) => {
+  const { techAssigned, techName, status, cost } = req.body;
+  const updates = [];
+  const values = [];
+  let index = 1;
 
-// Connect ALL routes
-app.use('/customers', customerRoutes);
-app.use('/appointments', appointmentRoutes);
-app.use('/technicians', technicianRoutes);
-app.use('/services', serviceRoutes);
-app.use('/service-records', serviceRecordRoutes);
-app.use('/schedules', scheduleRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  if (APP_DEBUG) console.error(err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: APP_DEBUG ? err.message : 'Internal server error',
-    ...(APP_DEBUG && { stack: err.stack })
-  });
+  if (techAssigned) { updates.push(`tech_assigned = $${index++}`); values.push(techAssigned); }
+  if (techName) { updates.push(`tech_name = $${index++}`); values.push(techName); }
+  if (status) { updates.push(`status = $${index++}`); values.push(status); }
+  if (cost !== undefined) { updates.push(`cost = $${index++}`); values.push(cost); }
+  
+  values.push(req.params.id);
+  await pool.query(`UPDATE appointments SET ${updates.join(', ')} WHERE id = $${index}`, values);
+  res.json({ success: true });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.path
-  });
+app.delete('/api/appointments/:id', async (req, res) => {
+  await pool.query('DELETE FROM appointments WHERE id = $1', [req.params.id]);
+  res.json({ success: true });
 });
 
-module.exports = app;
+// --- TECHNICIANS API ---
+app.get('/api/techs', async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT t.username, t.specialty, t.status, u.name 
+    FROM technicians t JOIN users u ON t.username = u.username
+  `);
+  res.json(rows);
+});
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`[${NODE_ENV}] Server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-  });
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
